@@ -14,7 +14,7 @@ function hashCode(str) {
 
 export function loadLocalMetrics() {
   return new Promise(resolve => {
-    chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const thisTab = tabs[0];
 
       // Retrieve the stored latest metrics
@@ -32,10 +32,10 @@ export function loadLocalMetrics() {
           if (result[key] !== undefined) {
             resolve({
               metrics: result[key],
-              background: tabLoadedInBackground
+              background: tabLoadedInBackground,
             });
           } else {
-            resolve({error: `Storage empty for key ${key}: ${result}`});
+            resolve({ error: `Storage empty for key ${key}: ${result}` });
           }
         });
       }
@@ -43,8 +43,22 @@ export function loadLocalMetrics() {
   });
 }
 
+// export function getOptions() {
+//   return new Promise(resolve => {
+//     chrome.storage.sync.get({preferPhoneField: false}, resolve);
+//   });
+// }
+
 export function getOptions() {
-  return new Promise(resolve => {
-    chrome.storage.sync.get({preferPhoneField: false}, resolve);
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get({ preferPhoneField: false }, items => {
+      const err = chrome.runtime.lastError;
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        resolve(items);
+      }
+    });
   });
 }

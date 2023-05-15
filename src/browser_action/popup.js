@@ -13,21 +13,24 @@
 
 import { loadLocalMetrics, getOptions } from './chrome.js';
 import { CrUX } from './crux.js';
-import { LCP, FID, INP,  CLS } from './metric.js';
-
+import { LCP, FID, INP, CLS } from './metric.js';
 
 class Popup {
-
-  constructor({metrics, background, options, error}) {
+  constructor({ metrics, background, options, error }) {
     if (error) {
       console.error(error);
       this.setStatus('Web Vitals are unavailable for this page');
       return;
     }
 
-    const {location, timestamp, ..._metrics} = metrics;
+    const { location, timestamp, ..._metrics } = metrics;
     // Format as a short timestamp (HH:MM:SS).
-    const formattedTimestamp = new Date(timestamp).toLocaleTimeString('en-US', {hourCycle: 'h23'});
+    const formattedTimestamp = new Date(timestamp).toLocaleTimeString('en-US', {
+      hourCycle: 'h23',
+    });
+
+    console.log('_metrics', _metrics);
+    console.log('background', background);
 
     this.location = location;
     this.timestamp = formattedTimestamp;
@@ -63,19 +66,19 @@ class Popup {
   initMetrics() {
     this.metrics.lcp = new LCP({
       local: this._metrics.lcp.value,
-      background: this.background
+      background: this.background,
     });
     this.metrics.cls = new CLS({
       local: this._metrics.cls.value,
-      background: this.background
+      background: this.background,
     });
     this.metrics.fid = new FID({
       local: this._metrics.fid.value,
-      background: this.background
+      background: this.background,
     });
     this.metrics.inp = new INP({
       local: this._metrics.inp.value,
-      background: this.background
+      background: this.background,
     });
 
     this.renderMetrics();
@@ -83,13 +86,15 @@ class Popup {
 
   initFieldData() {
     const formFactor = this.options.preferPhoneField ? CrUX.FormFactor.PHONE : CrUX.FormFactor.DESKTOP;
-    CrUX.load(this.location.url, formFactor).then(fieldData => {
-      console.log('CrUX data', fieldData);
-      this.renderFieldData(fieldData, formFactor);
-    }).catch(e => {
-      console.warn('Unable to load any CrUX data', e);
-      this.setStatus('Local metrics only (field data unavailable)');
-    });
+    CrUX.load(this.location.url, formFactor)
+      .then(fieldData => {
+        console.log('CrUX data', fieldData);
+        this.renderFieldData(fieldData, formFactor);
+      })
+      .catch(e => {
+        console.warn('Unable to load any CrUX data', e);
+        this.setStatus('Local metrics only (field data unavailable)');
+      });
   }
 
   setStatus(status) {
@@ -113,7 +118,7 @@ class Popup {
     deviceElement.classList.add(`device-${formFactor.toLowerCase()}`);
   }
 
-  setHovercardText(metric, fieldData, formFactor='') {
+  setHovercardText(metric, fieldData, formFactor = '') {
     const hovercard = document.querySelector(`#${metric.id} .hovercard`);
     const abbr = metric.abbr;
     const local = metric.formatValue(metric.local);
@@ -124,13 +129,14 @@ class Popup {
       const assessmentIndex = metric.getAssessmentIndex();
       const density = metric.getDensity(assessmentIndex, 0);
       const scope = CrUX.isOriginFallback(fieldData) ? 'origin' : 'page';
-      text += ` Your experience is similar to <strong>${density}</strong> of <span class="nowrap">real-user</span> ${formFactor.toLowerCase()} <strong>${abbr}</strong> experiences on this ${scope}.`
+      text += ` Your experience is similar to <strong>${density}</strong> of <span class="nowrap">real-user</span> ${formFactor.toLowerCase()} <strong>${abbr}</strong> experiences on this ${scope}.`;
     }
 
     hovercard.innerHTML = text;
   }
 
   renderMetrics() {
+    console.log('renderMetrics', this.metrics);
     Object.values(this.metrics).forEach(this.renderMetric.bind(this));
   }
 
@@ -193,7 +199,7 @@ class Popup {
       }
     }
 
-    const metrics = CrUX.getMetrics(fieldData).forEach(({id, data}) => {
+    const metrics = CrUX.getMetrics(fieldData).forEach(({ id, data }) => {
       const metric = this.metrics[id];
       if (!metric) {
         // The API may return additional metrics that we don't support.
@@ -225,9 +231,19 @@ class Popup {
       local.addEventListener('transitionend', resolve);
     });
   }
-
 }
 
-Promise.all([loadLocalMetrics(), getOptions()]).then(([localMetrics, options]) => {
-  window.popup = new Popup({...localMetrics, options});
-});
+// Promise.all([loadLocalMetrics(), getOptions()]).then(([localMetrics, options]) => {
+//   window.popup = new Popup({...localMetrics, options});
+// });
+
+Promise.all([loadLocalMetrics(), getOptions()])
+  .then(([localMetrics, options]) => {
+    console.log(JSON.stringify(localMetrics));
+    console.log('localMetrics', localMetrics);
+    console.log('options', options);
+    window.popup = new Popup({ ...localMetrics, options });
+  })
+  .catch(error => {
+    console.error('Error loading metrics or options:', error);
+  });

@@ -9,18 +9,21 @@ const optionsStatus = document.getElementById('status');
  * Save options to Chrome storage
  */
 function saveOptions() {
-  chrome.storage.sync.set({
-    enableOverlay: optionsOverlayNode.checked,
-    debug: optionsConsoleLoggingNode.checked,
-    userTiming: optionsUserTimingNode.checked,
-    preferPhoneField: optionsPreferPhoneFieldNode.checked,
-  }, () => {
-    // Update status to let user know options were saved.
-    optionsStatus.textContent = 'Options saved.';
-    setTimeout(() => {
-      optionsStatus.textContent = '';
-    }, 750);
-  });
+  chrome.storage.sync.set(
+    {
+      enableOverlay: optionsOverlayNode.checked,
+      debug: optionsConsoleLoggingNode.checked,
+      userTiming: optionsUserTimingNode.checked,
+      preferPhoneField: optionsPreferPhoneFieldNode.checked,
+    },
+    () => {
+      // Update status to let user know options were saved.
+      optionsStatus.textContent = 'Options saved.';
+      setTimeout(() => {
+        optionsStatus.textContent = '';
+      }, 750);
+    }
+  );
 }
 
 /**
@@ -28,17 +31,20 @@ function saveOptions() {
  * preferences stored in chrome.storage
  */
 function restoreOptions() {
-  chrome.storage.sync.get({
-    enableOverlay: false,
-    debug: false,
-    userTiming: false,
-    preferPhoneField: false,
-  }, ({enableOverlay, debug, userTiming, preferPhoneField}) => {
-    optionsOverlayNode.checked = enableOverlay;
-    optionsConsoleLoggingNode.checked = debug;
-    optionsUserTimingNode.checked = userTiming;
-    optionsPreferPhoneFieldNode.checked = preferPhoneField;
-  });
+  chrome.storage.sync.get(
+    {
+      enableOverlay: false,
+      debug: false,
+      userTiming: false,
+      preferPhoneField: false,
+    },
+    ({ enableOverlay, debug, userTiming, preferPhoneField }) => {
+      optionsOverlayNode.checked = enableOverlay;
+      optionsConsoleLoggingNode.checked = debug;
+      optionsUserTimingNode.checked = userTiming;
+      optionsPreferPhoneFieldNode.checked = preferPhoneField;
+    }
+  );
 }
 document.addEventListener('DOMContentLoaded', restoreOptions);
 optionsSaveBtn.addEventListener('click', saveOptions);

@@ -25,7 +25,7 @@ const CLS_THRESHOLD = 0.1;
 function hashCode(str) {
   let hash = 0;
   if (str.length === 0) {
-    return '';
+    return "";
   }
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
@@ -41,13 +41,16 @@ function hashCode(str) {
  * @param {Number} tabId
  */
 function getWebVitals(tabId) {
-  chrome.scripting.executeScript({
-    target: { tabId: tabId },
-    files: ['src/browser_action/vitals.js'],
-  }, (result) => {
-    // Catch errors such as "This page cannot be scripted due
-    // to an ExtensionsSettings policy."
-  });
+  chrome.scripting.executeScript(
+    {
+      target: { tabId: tabId },
+      files: ["src/browser_action/vitals.js"],
+    },
+    (result) => {
+      // Catch errors such as "This page cannot be scripted due
+      // to an ExtensionsSettings policy."
+    }
+  );
 }
 
 // User has navigated to a new URL in a tab
@@ -55,14 +58,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   const tabIdKey = tabId.toString();
 
   if (tab.active) {
-    chrome.storage.local.set({[tabIdKey]: false});
+    chrome.storage.local.set({ [tabIdKey]: false });
   } else {
-    chrome.storage.local.set({[tabIdKey]: true}); // tab was loaded in background
+    chrome.storage.local.set({ [tabIdKey]: true }); // tab was loaded in background
   }
 
   if (
-    changeInfo.status == 'complete' &&
-    tab.url.startsWith('http') &&
+    changeInfo.status == "complete" &&
+    tab.url.startsWith("http") &&
     tab.active
   ) {
     getWebVitals(tabId);
@@ -70,10 +73,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // User has made a new or existing tab visible
-chrome.tabs.onActivated.addListener(({tabId, windowId}) => {
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
   getWebVitals(tabId);
 });
-
 
 /**
  *
@@ -83,41 +85,44 @@ chrome.tabs.onActivated.addListener(({tabId, windowId}) => {
  * @param {Number} tabid
  */
 function badgeOverallPerf(badgeCategory, tabid) {
-  chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  }, function(tabs) {
-    const currentTab = tabid || tabs[0].id;
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true,
+    },
+    function (tabs) {
+      const currentTab = tabid || tabs[0].id;
 
-    switch (badgeCategory) {
-      case 'POOR':
-        chrome.action.setIcon({
-          path: '../../icons/slow128w.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: '',
-          tabId: currentTab,
-        });
-        break;
-      case 'GOOD':
-        chrome.action.setIcon({
-          path: '../../icons/fast128w.png',
-          tabId: currentTab,
-        });
-        break;
-      default:
-        chrome.action.setIcon({
-          path: '../../icons/default128w.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: '',
-          tabId: currentTab,
-        });
-        break;
+      switch (badgeCategory) {
+        case "POOR":
+          chrome.browserAction.setIcon({
+            path: "../../icons/slow128w.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: "",
+            tabId: currentTab,
+          });
+          break;
+        case "GOOD":
+          chrome.browserAction.setIcon({
+            path: "../../icons/fast128w.png",
+            tabId: currentTab,
+          });
+          break;
+        default:
+          chrome.browserAction.setIcon({
+            path: "../../icons/default128w.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: "",
+            tabId: currentTab,
+          });
+          break;
+      }
     }
-  });
+  );
 }
 
 /**
@@ -128,84 +133,87 @@ function badgeOverallPerf(badgeCategory, tabid) {
  * @param {Number} tabid
  */
 function badgeMetric(metric, value, tabid) {
-  chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  }, function(tabs) {
-    const currentTab = tabid || tabs[0].id;
-    const bgColor = '#000';
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true,
+    },
+    function (tabs) {
+      const currentTab = tabid || tabs[0].id;
+      const bgColor = "#000";
 
-    // If URL is overall failing the thresholds, only show
-    // a red badge for metrics actually failing (issues/22)
-    if (metric === 'cls' && value <= CLS_THRESHOLD) {
-      return;
-    }
-    if (metric === 'lcp' && value <= LCP_THRESHOLD) {
-      return;
-    }
-    if (metric === 'fid' && value <= FID_THRESHOLD) {
-      return;
-    }
+      // If URL is overall failing the thresholds, only show
+      // a red badge for metrics actually failing (issues/22)
+      if (metric === "cls" && value <= CLS_THRESHOLD) {
+        return;
+      }
+      if (metric === "lcp" && value <= LCP_THRESHOLD) {
+        return;
+      }
+      if (metric === "fid" && value <= FID_THRESHOLD) {
+        return;
+      }
 
-    switch (metric) {
-      case 'lcp':
-        chrome.action.setIcon({
-          path: '../../icons/slow128w-lcp.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeBackgroundColor({
-          color: bgColor,
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: (value / 1000).toFixed(2),
-          tabId: currentTab,
-        });
-        break;
-      case 'cls':
-        chrome.action.setIcon({
-          path: '../../icons/slow128w-cls.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeBackgroundColor({
-          color: bgColor,
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: (value).toFixed(2),
-          tabId: currentTab,
-        });
-        break;
-      case 'fid':
-        chrome.action.setIcon({
-          path: '../../icons/slow128w-fid.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeBackgroundColor({
-          color: bgColor,
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: value.toFixed(2),
-          tabId: currentTab,
-        });
-        break;
-      default:
-        chrome.action.setIcon({
-          path: '../../icons/default128w.png',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeBackgroundColor({
-          color: '',
-          tabId: currentTab,
-        });
-        chrome.action.setBadgeText({
-          text: '',
-          tabId: currentTab,
-        });
-        break;
+      switch (metric) {
+        case "lcp":
+          chrome.browserAction.setIcon({
+            path: "../../icons/slow128w-lcp.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeBackgroundColor({
+            color: bgColor,
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: (value / 1000).toFixed(2),
+            tabId: currentTab,
+          });
+          break;
+        case "cls":
+          chrome.browserAction.setIcon({
+            path: "../../icons/slow128w-cls.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeBackgroundColor({
+            color: bgColor,
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: value.toFixed(2),
+            tabId: currentTab,
+          });
+          break;
+        case "fid":
+          chrome.browserAction.setIcon({
+            path: "../../icons/slow128w-fid.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeBackgroundColor({
+            color: bgColor,
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: value.toFixed(2),
+            tabId: currentTab,
+          });
+          break;
+        default:
+          chrome.browserAction.setIcon({
+            path: "../../icons/default128w.png",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeBackgroundColor({
+            color: "",
+            tabId: currentTab,
+          });
+          chrome.action.setBadgeText({
+            text: "",
+            tabId: currentTab,
+          });
+          break;
+      }
     }
-  });
+  );
 }
 
 /**
@@ -248,18 +256,18 @@ async function animateBadges(request, tabId) {
   // First badge overall perf
   badgeOverallPerf(request.passesAllThresholds, tabId);
   // If perf is poor, animate the sequence
-  if (request.passesAllThresholds === 'POOR') {
+  if (request.passesAllThresholds === "POOR") {
     await wait(delay);
     if (animationsByTabId.get(tabId) !== animationId) return;
-    badgeMetric('lcp', request.metrics.lcp.value, tabId);
+    badgeMetric("lcp", request.metrics.lcp.value, tabId);
 
     await wait(delay);
     if (animationsByTabId.get(tabId) !== animationId) return;
-    badgeMetric('fid', request.metrics.fid.value, tabId);
+    badgeMetric("fid", request.metrics.fid.value, tabId);
 
     await wait(delay);
     if (animationsByTabId.get(tabId) !== animationId) return;
-    badgeMetric('cls', request.metrics.cls.value, tabId);
+    badgeMetric("cls", request.metrics.cls.value, tabId);
 
     // Loop the animation if no new information came in while we animated.
     await wait(delay);
@@ -279,9 +287,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // The popup will load the metric values from this storage.
     if (sender.tab.url) {
       const key = hashCode(sender.tab.url);
-      chrome.storage.local.set({[key]: request.metrics});
+      chrome.storage.local.set({ [key]: request.metrics });
     }
     // send TabId to content script
-    sendResponse({tabId: sender.tab.id});
+    sendResponse({ tabId: sender.tab.id });
   }
 });

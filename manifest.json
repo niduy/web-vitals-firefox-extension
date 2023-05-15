@@ -1,31 +1,33 @@
 {
   "name": "Web Vitals",
   "version": "1.2.2",
-  "manifest_version": 3,
+  "manifest_version": 2,
   "description": "Measure metrics for a healthy site",
   "homepage_url": "https://web.dev/vitals/",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "web-vitals@google"
+    }
+  },
   "icons": {
     "128": "icons/vitals128w.png",
     "256": "icons/vitals256w.png",
     "512": "icons/vitals512w.png"
   },
-  "action": {
+  "browser_action": {
     "default_icon": "icons/default256w.png",
     "default_title": "Web Vitals",
     "default_popup": "src/browser_action/popup.html"
   },
-  "options_page": "src/options/options.html",
-  "host_permissions": ["*://*/*"],
-  "permissions": ["tabs", "storage", "activeTab", "scripting"],
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": ["tabs", "storage", "activeTab", "scripting", "http://*/*", "https://*/*"],
   "web_accessible_resources": [
-    {
-      "resources": [
-        "src/browser_action/viewer.css",
-        "src/browser_action/web-vitals.js",
-        "src/browser_action/on-each-interaction.js"
-      ],
-      "matches": ["*://*/*"]
-    }
+    "src/browser_action/viewer.css",
+    "src/browser_action/web-vitals.js",
+    "src/browser_action/on-each-interaction.js"
   ],
   "content_scripts": [
     {
@@ -35,9 +37,7 @@
     }
   ],
   "background": {
-    "service_worker": "service_worker.js"
+    "scripts": ["service_worker.js"]
   },
-  "content_security_policy": {
-    "extension_pages": "default-src 'self'; connect-src https://chromeuxreport.googleapis.com;"
-  }
+  "content_security_policy": "default-src *; script-src 'self' 'unsafe-eval' connect-src https://chromeuxreport.googleapis.com;"
 }
